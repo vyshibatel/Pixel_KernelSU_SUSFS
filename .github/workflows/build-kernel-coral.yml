@@ -1,10 +1,10 @@
-name: Build OnePlus 11 Android 13 5.15 Kernel
+name: Build Coral 4.14 Kernel
 
 on:
   workflow_call:  # This allows this workflow to be called from another workflow
   
 jobs:
-  build-kernel-a13-5-15-kernelsu-susfs:
+  build-kernel-4-14-kernelsu-susfs:
     runs-on: ubuntu-22.04
 
     steps:
