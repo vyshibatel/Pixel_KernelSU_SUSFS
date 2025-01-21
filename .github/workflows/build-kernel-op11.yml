@@ -5,23 +5,19 @@ on:
   
 jobs:
   build-kernel-a13-5-15-kernelsu-susfs:
-    runs-on: ubuntu-local
+    runs-on: ubuntu-22.04
 
     steps:
-    #  - name: Maximize build space
-    #    uses: easimon/maximize-build-space@master
-    #    with:
-    #      root-reserve-mb: 8192    # 16GB for root memory reservation
-    #      temp-reserve-mb: 2048     # 8GB for temporary memory reservation
-    #      swap-size-mb: 16384       # 16GB for swap size
-    #      remove-dotnet: 'true'
-    #      remove-android: 'true'
-    #      remove-haskell: 'true'
-    #      remove-codeql: 'true'
-
-      - name: Cleanup workspace
-        run: |
-          rm -rf $GITHUB_WORKSPACE/*
+      - name: Maximize build space
+        uses: easimon/maximize-build-space@master
+        with:
+          root-reserve-mb: 8192    # 8GB for root memory reservation
+          temp-reserve-mb: 2048     # 2GB for temporary memory reservation
+          swap-size-mb: 8192       # 8GB for swap size
+          remove-dotnet: 'true'
+          remove-android: 'true'
+          remove-haskell: 'true'
+          remove-codeql: 'true'
 
       - name: Get build space
         run: |
@@ -31,7 +27,7 @@ jobs:
       - name: Set CONFIG Environment Variable
         run: |
           # Set CONFIG dynamically based on matrix values
-          CONFIG="op11"
+          CONFIG="coral"
           
           # Set CONFIG as an environment variable for future steps
           echo "CONFIG=$CONFIG" >> $GITHUB_ENV
@@ -51,8 +47,8 @@ jobs:
           echo "Cloning AnyKernel3 and other dependencies..."
     
           # Define the branch names using the matrix values
-          ANYKERNEL_BRANCH="android13-5.15"
-          SUSFS_BRANCH="gki-android13-5.15"
+          ANYKERNEL_BRANCH="android-4.14"
+          SUSFS_BRANCH="kernel-4.14"
 
           # Debug print the branches
           echo "Using branch for AnyKernel3: $ANYKERNEL_BRANCH"
@@ -80,23 +76,23 @@ jobs:
       - name: Add KernelSU
         run: |
           echo "Changing to configuration directory: $CONFIG..."
-          cd "$CONFIG/kernel_platform"
+          cd "$CONFIG"
           
           echo "Adding KernelSU..."
           curl -LSs "https://raw.githubusercontent.com/rifsxd/KernelSU-Next/next/kernel/setup.sh" | bash -
-          cd ./KernelSU-Next/kernel
-          sed -i 's/ccflags-y += -DKSU_VERSION=16/ccflags-y += -DKSU_VERSION=12321/' ./Makefile
+          #cd ./KernelSU-Next/kernel
+          #sed -i 's/ccflags-y += -DKSU_VERSION=16/ccflags-y += -DKSU_VERSION=12321/' ./Makefile
 
       - name: Apply SUSFS Patches
         run: |
           echo "Changing to configuration directory: $CONFIG..."
-          cd "$CONFIG/kernel_platform"
+          cd "$CONFIG"
           
           echo "Applying SUSFS patches..."
           
           # Copy SUSFS patches
           cp ../../susfs4ksu/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch ./KernelSU-Next/
-          cp ../../susfs4ksu/kernel_patches/50_add_susfs_in_gki-android13-5.15.patch ./common/
+          cp ../../susfs4ksu/kernel_patches/50_add_susfs_in_kernel-4.14.patch ./common/
           cp ../../susfs4ksu/kernel_patches/fs/* ./common/fs/
           cp ../../susfs4ksu/kernel_patches/include/linux/* ./common/include/linux/
 
@@ -107,33 +103,33 @@ jobs:
           
           # Change to common directory and apply SUSFS patch
           cd ../common
-          patch -p1 < 50_add_susfs_in_gki-android13-5.15.patch || true
+          patch -p1 < 50_add_susfs_in_kernel-4.14.patch || true
           
       - name: Apply Next-SUSFS Patches
         run: |
           echo "Changing to configuration directory: $CONFIG..."
-          cd "$CONFIG/kernel_platform"
+          cd "$CONFIG"
           
           echo "Applying next SUSFS patches..."
-          cp ../../kernel_patches/apk_sign.c_fix.patch ./
+          cp ../kernel_patches/apk_sign.c_fix.patch ./
           patch -p1 -F 3 < apk_sign.c_fix.patch
-          cp ../../kernel_patches/core_hook.c_fix.patch ./
+          cp ../kernel_patches/core_hook.c_fix.patch ./
           patch -p1 --fuzz=3 < core_hook.c_fix.patch
-          cp ../../kernel_patches/selinux.c_fix.patch ./
+          cp ../kernel_patches/selinux.c_fix.patch ./
           patch -p1 -F 3 < selinux.c_fix.patch
 
       - name: Apply Hide Stuff Patches
         run: |
           echo "Changing to configuration directory: $CONFIG..."
-          cd "$CONFIG/kernel_platform/common"
+          cd "$CONFIG/common"
           # Apply additional patch
-          cp ../../../kernel_patches/69_hide_stuff.patch ./
+          cp ../../kernel_patches/69_hide_stuff.patch ./
           patch -p1 -F 3 < 69_hide_stuff.patch || true
 
       - name: Add SUSFS Configuration Settings
         run: |
           echo "Changing to configuration directory: $CONFIG..."
-          cd "$CONFIG/kernel_platform"
+          cd "$CONFIG"
           
           echo "Adding configuration settings to gki_defconfig..."
           
@@ -162,7 +158,7 @@ jobs:
       - name: Run sed and perl Commands
         run: |
           echo "Changing to configuration directory: $CONFIG..."
-          cd "$CONFIG/kernel_platform"
+          cd "$CONFIG"
           
           echo "Running sed commands..."
           
@@ -181,8 +177,8 @@ jobs:
           cd "$CONFIG"
           
           echo "Building the kernel..."
-          rm -rf ./kernel_platform/common/android/abi_gki_protected_exports_*
-          ./kernel_platform/oplus/build/oplus_build_kernel.sh kalama gki
+          rm -rf ./common/android/abi_gki_protected_exports_*
+          LTO=thin BUILD_CONFIG=common/build.config.gki.aarch64 build/build.sh
 
       - name: Create Bootimgs Folder and Copy Images
         run: |
@@ -207,7 +203,3 @@ jobs:
           name: kernel-${{ env.CONFIG }}
           path: |
             *.zip
-
-      - name: Cleanup workspace
-        run: |
-          rm -rf $GITHUB_WORKSPACE/*
