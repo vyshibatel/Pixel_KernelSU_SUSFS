@@ -19,7 +19,7 @@ on:
         default: false
 
 jobs:
-  build-kernel-op11:
+  build-kernel-coral:
     uses: ./.github/workflows/build-kernel-coral.yml
     secrets: inherit
     if: ${{ inputs.build_coral }}
