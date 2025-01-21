@@ -67,16 +67,8 @@ jobs:
           
           # Initialize and sync kernel source
           echo "Initializing and syncing kernel source..."
-          $REPO init -u https://android.googlesource.com/kernel/manifest -b common-android-msm-coral-4.14-android13 --repo-rev=v2.16 --depth=1
+          $REPO init -u https://android.googlesource.com/kernel/manifest -b android-msm-coral-4.14-android13 --repo-rev=v2.16 --depth=1
 
-          REMOTE_BRANCH=$(git ls-remote https://android.googlesource.com/kernel/common android-msm-coral-4.14-android13
-          DEFAULT_MANIFEST_PATH=.repo/manifests/default.xml
-
-          # Check if branch is deprecated
-          if grep -q deprecated <<< $REMOTE_BRANCH; then
-            echo "Found deprecated branch: "
-            sed -i "s/\"android-msm-coral-4.14-android13\"/\"deprecated\/android-msm-coral-4.14-android13\"/g" $DEFAULT_MANIFEST_PATH
-          fi
 
           # Sync repo and apply patches
           $REPO --version
