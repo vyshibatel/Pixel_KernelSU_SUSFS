@@ -27,7 +27,7 @@ jobs:
   trigger-release:
     runs-on: ubuntu-latest
     needs:
-        - build-coral
+        - build-Kernel-coral
         
     if: ${{ inputs.make_release }}
     env:
