@@ -1,4 +1,4 @@
-# Warning!
+# Wild Plus Kernels for Android GKI 2.0 Devices and Others
 
 ## Your warranty is no longer valid!
 
@@ -11,6 +11,15 @@ By flashing this kernel, **YOU** are choosing to make these modifications. If so
 ---
 
 ### Proceed at your own risk!
+
+---
+
+# Kernels:
+ 
+[GKI](https://github.com/WildPlusKernel/GKI_KernelSU_SUSFS)  
+[Sultan](https://github.com/WildPlusKernel/Sultan_KernelSU_SUSFS)  
+[OnePlus](https://github.com/WildPlusKernel/OnePlus_KernelSU_SUSFS)  
+[Legacy Pixels](https://github.com/WildPlusKernel/Pixel_KernelSU_SUSFS)  
 
 ---
 
@@ -31,7 +40,9 @@ Follow the steps for GKI:
 # Credits
 
 - **KernelSU**: Developed by [tiann](https://github.com/tiann).
+- **KernelSU-Next**: Developed by [rifsxd](https://github.com/rifsxd/KernelSU-Next).
 - **SUSFS**: Developed by [simonpunk](https://gitlab.com/simonpunk/susfs4ksu.git).
+- **SUSFS Module**: Developed by [sidex15](https://github.com/sidex15).
 
 Special thanks to the open-source community for their contributions!
 
@@ -53,18 +64,22 @@ Flashing this kernel will void your warranty, and there is always a risk of bric
 
 # To-DO
 
-- [X] Build AnyKernel3 zips
-- [X] Add boot.imgs
-- [ ] Make GitHub Actions
-- [ ] Add more devices (Never going to end 😄)
+- [X] Get Stoned
 
 ---
 
 ### If you need your kernel version added please let me know and I will build it!
 
-[Telegram](https://t.me/TheWildJames)  
-[Telegram Group](https://t.me/wildkernelplus)  
+[Telegram](https://t.me/TheWildJames) NO DMS PLEASE! Ask in chat below!  
+[Telegram Group](https://t.me/wildpluskernel)  
 [Build Scripts](https://github.com/TheWildJames/kernel_build_scripts)
 
+# Special thanks to the following people for their contributions!
+This helps me alot! <3
 
+[simonpunk](https://gitlab.com/simonpunk/susfs4ksu.git) - Created SUSFS!  
+[sidex15](https://github.com/sidex15) - Created module!  
+[backslashxx](https://github.com/backslashxx) - Helped with patches!  
+[幕落](https://github.com/MuLuo688) - Donation!  
 
+If you have contributed and are not here please remind me!
