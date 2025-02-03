@@ -158,6 +158,7 @@ jobs:
           # Run sed commands for modifications
           sed -i 's/check_defconfig//' ./build.config
           sed -i 's/check_defconfig//' ./build.config.floral
+          sed -i 's/check_defconfig//' ./build.config.floral_no-cfi
           sed -i '$s|echo "\$res"|echo "\$res-Wild+"|' ./scripts/setlocalversion
           sed -i 's/-dirty//' ./scripts/setlocalversion
           
