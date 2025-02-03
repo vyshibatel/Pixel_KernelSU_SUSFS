@@ -173,7 +173,7 @@ jobs:
       - name: Build the Kernel
         run: |
           echo "Changing to configuration directory: $CONFIG..."
-          cd "$CONFIG/private/msm-google/"
+          cd "$CONFIG"
           
           echo "Building the kernel..."
           BUILD_AOSP_KERNEL=1 ./build_floral.sh
