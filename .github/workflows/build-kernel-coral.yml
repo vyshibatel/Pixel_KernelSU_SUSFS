@@ -110,6 +110,13 @@ jobs:
           # Change to common directory and apply SUSFS patch
           cd ..
           patch -p1 < 50_add_susfs_in_kernel-4.14.patch || true
+        continue-on-error: true
+
+      - name: Upload Coral folder
+        uses: actions/upload-artifact@v4
+        with:
+          name: coral-artifact
+          path: coral/
 
       - name: Apply KSU Hooks
         run: |
