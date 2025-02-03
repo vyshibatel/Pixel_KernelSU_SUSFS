@@ -160,7 +160,7 @@ jobs:
           sed -i 's/check_defconfig//' ./build.config.floral
           sed -i 's/check_defconfig && //' ./build.config.floral_no-cfi
 
-          sed -i '$s|echo "\$res"|echo "\$res-Wild+"|' ./scripts/setlocalversion
+          sed -i '$s|echo "\$res"|echo "\-Wild+"|' ./scripts/setlocalversion
           sed -i 's/-dirty//' ./scripts/setlocalversion
           
           # Run perl command to modify UTS_VERSION
