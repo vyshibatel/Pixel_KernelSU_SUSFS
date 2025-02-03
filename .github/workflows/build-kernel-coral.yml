@@ -105,11 +105,11 @@ jobs:
           cd ./KernelSU
           
           # Apply SUSFS patch for KernelSU
-          patch -p1 --forward < 10_enable_susfs_for_ksu.patch || true
+          patch -p1 --fuzz=3 < 10_enable_susfs_for_ksu.patch || true
           
           # Change to common directory and apply SUSFS patch
           cd ..
-          patch -p1 < 50_add_susfs_in_kernel-4.14.patch || true
+          patch -p1 --fuzz=3 < 50_add_susfs_in_kernel-4.14.patch || true
         continue-on-error: true
 
       - name: Upload Coral folder
