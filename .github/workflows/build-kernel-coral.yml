@@ -40,7 +40,7 @@ jobs:
       - name: Clone AnyKernel3 and Other Dependencies
         run: |
           echo "Cloning AnyKernel3 and other dependencies..."
-    
+          
           # Define the branch names using the matrix values
           ANYKERNEL_BRANCH="non-gki"
           SUSFS_BRANCH="kernel-4.14"
@@ -177,7 +177,7 @@ jobs:
           echo "Creating zip files for all formats..."
           cd ./AnyKernel3
           
-          ZIP_NAME="Anykernel3-OP11-A15-android11-5.15-KernelSU-SUSFS.zip"
+          ZIP_NAME="Anykernel3-Coral-android13-4.14-Next-SUSFS.zip"
           echo "Creating zip file $ZIP_NAME..."
           zip -r "../$ZIP_NAME" ./*
           
