@@ -19,11 +19,6 @@ jobs:
           remove-haskell: 'true'
           remove-codeql: 'true'
 
-      - name: Get build space
-        run: |
-          free -h
-          df -h
-
       - name: Set CONFIG Environment Variable
         run: |
           # Set CONFIG dynamically based on matrix values
@@ -41,12 +36,6 @@ jobs:
           curl https://storage.googleapis.com/git-repo-downloads/repo > ./git-repo/repo
           chmod a+rx ./git-repo/repo
           echo "REPO=$GITHUB_WORKSPACE/./git-repo/repo" >> $GITHUB_ENV
-
-      - name: Install Others
-        run: |
-          # Install dependencies
-          sudo apt update
-          sudo apt install build-essential flex bison libssl-dev libelf-dev libncurses5-dev gcc-aarch64-linux-gnu make
 
       - name: Clone AnyKernel3 and Other Dependencies
         run: |
@@ -85,10 +74,8 @@ jobs:
           cd "$CONFIG/private/msm-google/"
           
           echo "Adding KernelSU..."
-          curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh" | bash -s v0.9.5
-          #cd ./KernelSU/kernel
-          #sed -i 's/ccflags-y += -DKSU_VERSION=16/ccflags-y += -DKSU_VERSION=12321/' ./Makefile
-
+           curl -LSs "https://raw.githubusercontent.com/KernelSU-Next/KernelSU-Next/next/kernel/setup.sh" | bash -
+          
       - name: Apply SUSFS Patches
         run: |
           echo "Changing to configuration directory: $CONFIG..."
@@ -97,19 +84,21 @@ jobs:
           echo "Applying SUSFS patches..."
           
           # Copy SUSFS patches
-          cp ../../../susfs4ksu/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch ./KernelSU/
+          cp ../../kernel_patches/next/0001-kernel-patch-susfs-v1.5.5-to-KernelSU-Next-v1.0.5.patch ./
           cp ../../../susfs4ksu/kernel_patches/50_add_susfs_in_kernel-4.14.patch ./
           cp ../../../susfs4ksu/kernel_patches/fs/* ./fs/
           cp ../../../susfs4ksu/kernel_patches/include/linux/* ./include/linux/
 
-          cd ./KernelSU
+          cd ./KernelSU-Next
           
           # Apply SUSFS patch for KernelSU
-          patch -p1 --fuzz=3 < 10_enable_susfs_for_ksu.patch || true
+          patch -p1 --forward < 0001-kernel-patch-susfs-v1.5.5-to-KernelSU-Next-v1.0.5.patch || true
           
           # Change to common directory and apply SUSFS patch
           cd ..
           patch -p1 --fuzz=3 < 50_add_susfs_in_kernel-4.14.patch || true
+
+          exit
 
       - name: Apply KSU Hooks
         run: |
