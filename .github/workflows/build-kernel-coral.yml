@@ -103,8 +103,8 @@ jobs:
           echo "Changing to configuration directory: $CONFIG..."
           cd "$CONFIG/private/msm-google/"
           # Apply additional patch
-          cp ../../../kernel_patches/next/next_hooks.patch ./
-          patch -p1 --fuzz=3 < ./next_hooks.patch
+          cp ../../../kernel_patches/next/next_hooks_4.14.patch ./
+          patch -p1 --fuzz=3 < ./next_hooks_4.14.patch
 
       - name: Add SUSFS Configuration Settings
         run: |
