@@ -102,7 +102,7 @@ jobs:
           #patch -p1 --fuzz=3 < fdinfo.patch || true
 
           sed -i 's/inotify_mark_user_mask(mark));/mask, mark->ignored_mask);/' ./fs/notify/fdinfo.c
-          sed '/#ifdef CONFIG_KSU_SUSFS_SUS_MOUNT/{N;s/#ifdef CONFIG_KSU_SUSFS_SUS_MOUNT\n\t\tif (/&\n\t\tu32 mask = mark->mask & IN_ALL_EVENTS;/}' ./fs/notify/fdinfo.c
+          sed -i '/if (likely(current->susfs_task_state & TASK_STRUCT_NON_ROOT_USER_APP_PROC) &&/i \ \ \ \ u32 mask = mark->mask & IN_ALL_EVENTS;' ./fs/notify/fdinfo.c
 
       - name: Apply KSU Hooks
         run: |
