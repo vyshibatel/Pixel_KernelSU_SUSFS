@@ -101,6 +101,7 @@ jobs:
           #cp ../../../kernel_patches/pixel/fdinfo.patch ./
           #patch -p1 --fuzz=3 < fdinfo.patch || true
 
+          sed -i 's/^\(\s*\)u32 mask = mark->mask & IN_ALL_EVENTS;/\1\/\/u32 mask = mark->mask & IN_ALL_EVENTS;/' ./fs/notify/fdinfo.c
           sed -i 's/inotify_mark_user_mask(mark));/mask, mark->ignored_mask);/' ./fs/notify/fdinfo.c
           sed -i '/if (likely(current->susfs_task_state & TASK_STRUCT_NON_ROOT_USER_APP_PROC) &&/i \ \ \ \ u32 mask = mark->mask & IN_ALL_EVENTS;' ./fs/notify/fdinfo.c
 
