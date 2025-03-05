@@ -22,20 +22,12 @@ jobs:
       - name: Set CONFIG Environment Variable
         run: |
           # Set CONFIG dynamically based on matrix values
-          CONFIG="coral"
+          CONFIG="android_kernel_google_msm-4.14"
           
           # Set CONFIG as an environment variable for future steps
           echo "CONFIG=$CONFIG" >> $GITHUB_ENV
           
           echo "CONFIG set to: $CONFIG"
-
-      - name: Install Repo
-        run: |
-          # Install dependencies
-          mkdir -p ./git-repo
-          curl https://storage.googleapis.com/git-repo-downloads/repo > ./git-repo/repo
-          chmod a+rx ./git-repo/repo
-          echo "REPO=$GITHUB_WORKSPACE/./git-repo/repo" >> $GITHUB_ENV
 
       - name: Clone AnyKernel3 and Other Dependencies
         run: |
@@ -53,25 +45,12 @@ jobs:
           git clone https://github.com/WildPlusKernel/AnyKernel3.git -b "$ANYKERNEL_BRANCH"
           git clone https://gitlab.com/simonpunk/susfs4ksu.git -b "$SUSFS_BRANCH"
           git clone https://github.com/WildPlusKernel/kernel_patches.git
-      
-      - name: Initialize and Sync Kernel Source
-        run: |
-          echo "Creating folder for configuration: $CONFIG..."
-          mkdir -p "$CONFIG"
-          cd "$CONFIG"
-          
-          # Initialize and sync kernel source
-          echo "Initializing and syncing kernel source..."
-          $REPO init -u https://android.googlesource.com/kernel/manifest -b android-msm-coral-4.14-android13 --repo-rev=v2.16 --depth=1
-
-          # Sync repo and apply patches
-          $REPO --version
-          $REPO --trace sync -c -j$(nproc --all) --no-tags --fail-fast
+          git clone https://github.com/LineageOS/android_kernel_google_msm-4.14/
 
       - name: Add KernelSU
         run: |
           echo "Changing to configuration directory: $CONFIG..."
-          cd "$CONFIG/private/msm-google/"
+          cd "$CONFIG"
           
           echo "Adding KernelSU..."
           curl -LSs "https://raw.githubusercontent.com/KernelSU-Next/KernelSU-Next/next/kernel/setup.sh" | bash -
@@ -79,15 +58,15 @@ jobs:
       - name: Apply SUSFS Patches
         run: |
           echo "Changing to configuration directory: $CONFIG..."
-          cd "$CONFIG/private/msm-google/"
+          cd "$CONFIG"
           
           echo "Applying SUSFS patches..."
           
           # Copy SUSFS patches
-          cp ../../../kernel_patches/next/0001-kernel-patch-susfs-v1.5.5-to-KernelSU-Next-v1.0.5.patch ./KernelSU-Next
-          cp ../../../susfs4ksu/kernel_patches/50_add_susfs_in_kernel-4.14.patch ./
-          cp ../../../susfs4ksu/kernel_patches/fs/* ./fs/
-          cp ../../../susfs4ksu/kernel_patches/include/linux/* ./include/linux/
+          cp ../kernel_patches/next/0001-kernel-patch-susfs-v1.5.5-to-KernelSU-Next-v1.0.5.patch ./KernelSU-Next
+          cp ../susfs4ksu/kernel_patches/50_add_susfs_in_kernel-4.14.patch ./
+          cp ../susfs4ksu/kernel_patches/fs/* ./fs/
+          cp ../susfs4ksu/kernel_patches/include/linux/* ./include/linux/
 
           cd ./KernelSU-Next
           
@@ -98,7 +77,7 @@ jobs:
           cd ..
           patch -p1 --fuzz=3 < 50_add_susfs_in_kernel-4.14.patch || true
 
-          #cp ../../../kernel_patches/pixel/fdinfo.patch ./
+          #cp ../kernel_patches/pixel/fdinfo.patch ./
           #patch -p1 --fuzz=3 < fdinfo.patch || true
 
           sed -i 's/^\(\s*\)u32 mask = mark->mask & IN_ALL_EVENTS;/\1\/\/u32 mask = mark->mask & IN_ALL_EVENTS;/' ./fs/notify/fdinfo.c
@@ -110,13 +89,13 @@ jobs:
           echo "Changing to configuration directory: $CONFIG..."
           cd "$CONFIG/private/msm-google/"
           # Apply additional patch
-          cp ../../../kernel_patches/next/next_hooks_4.14.patch ./
+          cp ../kernel_patches/next/next_hooks_4.14.patch ./
           patch -p1 --fuzz=3 < ./next_hooks_4.14.patch
 
       - name: Add SUSFS Configuration Settings
         run: |
           echo "Changing to configuration directory: $CONFIG..."
-          cd "$CONFIG/private/msm-google/"
+          cd "$CONFIG"
           
           echo "Adding configuration settings to floral_defconfig..."
 
@@ -148,7 +127,7 @@ jobs:
       - name: Run sed and perl Commands
         run: |
           echo "Changing to configuration directory: $CONFIG..."
-          cd "$CONFIG/private/msm-google/"
+          cd "$CONFIG"
           
           echo "Running sed commands..."
           
