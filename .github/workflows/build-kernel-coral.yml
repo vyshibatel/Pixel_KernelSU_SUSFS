@@ -53,25 +53,16 @@ jobs:
           git clone https://github.com/WildPlusKernel/AnyKernel3.git -b "$ANYKERNEL_BRANCH"
           git clone https://gitlab.com/simonpunk/susfs4ksu.git -b "$SUSFS_BRANCH"
           git clone https://github.com/WildPlusKernel/kernel_patches.git
-
+      
       - name: Initialize and Sync Kernel Source
         run: |
           echo "Creating folder for configuration: $CONFIG..."
           mkdir -p "$CONFIG"
           cd "$CONFIG"
-
+          
           # Initialize and sync kernel source
           echo "Initializing and syncing kernel source..."
-          $REPO init --depth=1 --u https://android.googlesource.com/kernel/manifest -b common-android-4.19-stable --repo-rev=v2.16
-
-          REMOTE_BRANCH=$(git ls-remote https://android.googlesource.com/kernel/common android-4.19-stable)
-          DEFAULT_MANIFEST_PATH=.repo/manifests/default.xml
-
-          # Check if branch is deprecated
-          if grep -q deprecated <<< $REMOTE_BRANCH; then
-            echo "Found deprecated branch: $FORMATTED_BRANCH"
-            sed -i "s/\"android-4.19-stable\"/\"deprecated\/android-4.19-stable\"/g" $DEFAULT_MANIFEST_PATH
-          fi
+          $REPO init -u https://android.googlesource.com/kernel/manifest -b android-msm-coral-4.14-android13 --repo-rev=v2.16 --depth=1
 
           # Sync repo and apply patches
           $REPO --version
@@ -80,7 +71,7 @@ jobs:
       - name: Add KernelSU
         run: |
           echo "Changing to configuration directory: $CONFIG..."
-          cd "$CONFIG/common"
+          cd "$CONFIG/private/msm-google/"
           
           echo "Adding KernelSU..."
           curl -LSs "https://raw.githubusercontent.com/KernelSU-Next/KernelSU-Next/next/kernel/setup.sh" | bash -
@@ -88,15 +79,15 @@ jobs:
       - name: Apply SUSFS Patches
         run: |
           echo "Changing to configuration directory: $CONFIG..."
-          cd "$CONFIG/common"
+          cd "$CONFIG/private/msm-google/"
           
           echo "Applying SUSFS patches..."
           
           # Copy SUSFS patches
-          cp ../../kernel_patches/next/0001-kernel-patch-susfs-v1.5.5-to-KernelSU-Next-v1.0.5.patch ./KernelSU-Next
-          cp ../../susfs4ksu/kernel_patches/50_add_susfs_in_kernel-4.14.patch ./
-          cp ../../susfs4ksu/kernel_patches/fs/* ./fs/
-          cp ../../susfs4ksu/kernel_patches/include/linux/* ./include/linux/
+          cp ../../../kernel_patches/next/0001-kernel-patch-susfs-v1.5.5-to-KernelSU-Next-v1.0.5.patch ./KernelSU-Next
+          cp ../../../susfs4ksu/kernel_patches/50_add_susfs_in_kernel-4.14.patch ./
+          cp ../../../susfs4ksu/kernel_patches/fs/* ./fs/
+          cp ../../../susfs4ksu/kernel_patches/include/linux/* ./include/linux/
 
           cd ./KernelSU-Next
           
@@ -117,56 +108,54 @@ jobs:
       - name: Apply KSU Hooks
         run: |
           echo "Changing to configuration directory: $CONFIG..."
-          cd "$CONFIG/common"
+          cd "$CONFIG/private/msm-google/"
           # Apply additional patch
-          cp ../../kernel_patches/next/next_hooks_4.14.patch ./
+          cp ../../../kernel_patches/next/next_hooks_4.14.patch ./
           patch -p1 --fuzz=3 < ./next_hooks_4.14.patch
 
       - name: Add SUSFS Configuration Settings
         run: |
           echo "Changing to configuration directory: $CONFIG..."
-          cd "$CONFIG/common"
+          cd "$CONFIG/private/msm-google/"
           
-          echo "Adding configuration settings to gki_defconfig..."
+          echo "Adding configuration settings to floral_defconfig..."
 
-          echo "CONFIG_KSU=y" >> ./arch/arm64/configs/gki_defconfig
-          echo "CONFIG_KSU_WITH_KPROBES=n" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_KSU=y" >> ./arch/arm64/configs/floral_defconfig
+          echo "CONFIG_KSU_WITH_KPROBES=n" >> ./arch/arm64/configs/floral_defconfig
           
           # Add SUSFS configuration settings
-          echo "CONFIG_KSU_SUSFS=y" >> ./arch/arm64/configs/gki_defconfig
-          echo "CONFIG_KSU_SUSFS_HAS_MAGIC_MOUNT=y" >> ./arch/arm64/configs/gki_defconfig
-          echo "CONFIG_KSU_SUSFS_SUS_PATH=y" >> ./arch/arm64/configs/gki_defconfig
-          echo "CONFIG_KSU_SUSFS_SUS_MOUNT=y" >> ./arch/arm64/configs/gki_defconfig
-          echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_KSU_DEFAULT_MOUNT=y" >> ./arch/arm64/configs/gki_defconfig
-          echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_BIND_MOUNT=y" >> ./arch/arm64/configs/gki_defconfig
-          echo "CONFIG_KSU_SUSFS_SUS_KSTAT=y" >> ./arch/arm64/configs/gki_defconfig
-          echo "CONFIG_KSU_SUSFS_SUS_OVERLAYFS=y" >> ./arch/arm64/configs/gki_defconfig
-          echo "CONFIG_KSU_SUSFS_TRY_UMOUNT=y" >> ./arch/arm64/configs/gki_defconfig
-          echo "CONFIG_KSU_SUSFS_AUTO_ADD_TRY_UMOUNT_FOR_BIND_MOUNT=y" >> ./arch/arm64/configs/gki_defconfig
-          echo "CONFIG_KSU_SUSFS_SPOOF_UNAME=y" >> ./arch/arm64/configs/gki_defconfig
-          echo "CONFIG_KSU_SUSFS_ENABLE_LOG=y" >> ./arch/arm64/configs/gki_defconfig
-          echo "CONFIG_KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS=y" >> ./arch/arm64/configs/gki_defconfig
-          echo "CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG=y" >> ./arch/arm64/configs/gki_defconfig
-          echo "CONFIG_KSU_SUSFS_OPEN_REDIRECT=y" >> ./arch/arm64/configs/gki_defconfig
-          echo "CONFIG_KSU_SUSFS_SUS_SU=n" >> ./arch/arm64/configs/gki_defconfig
+          echo "CONFIG_KSU_SUSFS=y" >> ./arch/arm64/configs/floral_defconfig
+          echo "CONFIG_KSU_SUSFS_HAS_MAGIC_MOUNT=y" >> ./arch/arm64/configs/floral_defconfig
+          echo "CONFIG_KSU_SUSFS_SUS_PATH=y" >> ./arch/arm64/configs/floral_defconfig
+          echo "CONFIG_KSU_SUSFS_SUS_MOUNT=y" >> ./arch/arm64/configs/floral_defconfig
+          echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_KSU_DEFAULT_MOUNT=y" >> ./arch/arm64/configs/floral_defconfig
+          echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_BIND_MOUNT=y" >> ./arch/arm64/configs/floral_defconfig
+          echo "CONFIG_KSU_SUSFS_SUS_KSTAT=y" >> ./arch/arm64/configs/floral_defconfig
+          echo "CONFIG_KSU_SUSFS_SUS_OVERLAYFS=y" >> ./arch/arm64/configs/floral_defconfig
+          echo "CONFIG_KSU_SUSFS_TRY_UMOUNT=y" >> ./arch/arm64/configs/floral_defconfig
+          echo "CONFIG_KSU_SUSFS_AUTO_ADD_TRY_UMOUNT_FOR_BIND_MOUNT=y" >> ./arch/arm64/configs/floral_defconfig
+          echo "CONFIG_KSU_SUSFS_SPOOF_UNAME=y" >> ./arch/arm64/configs/floral_defconfig
+          echo "CONFIG_KSU_SUSFS_ENABLE_LOG=y" >> ./arch/arm64/configs/floral_defconfig
+          echo "CONFIG_KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS=y" >> ./arch/arm64/configs/floral_defconfig
+          echo "CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG=y" >> ./arch/arm64/configs/floral_defconfig
+          echo "CONFIG_KSU_SUSFS_OPEN_REDIRECT=y" >> ./arch/arm64/configs/floral_defconfig
+          echo "CONFIG_KSU_SUSFS_SUS_SU=n" >> ./arch/arm64/configs/floral_defconfig
           
           # Add additional tmpfs config setting
-          echo "CONFIG_TMPFS_XATTR=y" >> ./arch/arm64/configs/gki_defconfig
-          echo "CONFIG_TMPFS_POSIX_ACL=y" >> ./arch/arm64/configs/gki_defconfig
-
-          sed -i 's/check_defconfig//' ./build.config.gki
+          echo "CONFIG_TMPFS_XATTR=y" >> ./arch/arm64/configs/floral_defconfig
+          echo "CONFIG_TMPFS_POSIX_ACL=y" >> ./arch/arm64/configs/floral_defconfig
 
       - name: Run sed and perl Commands
         run: |
           echo "Changing to configuration directory: $CONFIG..."
-          cd "$CONFIG/common"
+          cd "$CONFIG/private/msm-google/"
           
           echo "Running sed commands..."
           
           # Run sed commands for modifications
           #sed -i 's/check_defconfig//' ./build.config
           #sed -i 's/check_defconfig//' ./build.config.floral
-          #sed -i 's/check_defconfig && //' ./build.config.floral_no-cfi
+          sed -i 's/check_defconfig && //' ./build.config.floral_no-cfi
 
           sed -i '$s|echo "\$res"|echo "\-Wild+"|' ./scripts/setlocalversion
           sed -i 's/-dirty//' ./scripts/setlocalversion
@@ -180,7 +169,7 @@ jobs:
           cd "$CONFIG"
           
           echo "Building the kernel..."
-          LTO=thin BUILD_CONFIG=common/build.config.gki.aarch64 build/build.sh
+          BUILD_AOSP_KERNEL=1 ./build_floral.sh
 
       - name: Create Bootimgs Folder and Copy Images
         run: |
@@ -189,7 +178,6 @@ jobs:
           
           echo "Copying Image"
           cp ./out/android-msm-pixel-4.14/dist/Image.lz4 ../AnyKernel3/Image.lz4
-          cp ./out/android-msm-pixel-4.14/dist/dtbo.img ../AnyKernel3/dtbo.img
           
       - name: Create ZIP Files for Different Formats
         run: |
