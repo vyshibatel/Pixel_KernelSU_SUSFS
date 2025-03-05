@@ -98,8 +98,8 @@ jobs:
           cd ..
           patch -p1 --fuzz=3 < 50_add_susfs_in_kernel-4.14.patch || true
 
-          cp ../../../kernel_patches/pixel/fdinfo.patch ./
-          patch -p1 --fuzz=3 < fdinfo.patch || true
+          #cp ../../../kernel_patches/pixel/fdinfo.patch ./
+          #patch -p1 --fuzz=3 < fdinfo.patch || true
 
       - name: Apply KSU Hooks
         run: |
