@@ -19,6 +19,11 @@ jobs:
           remove-haskell: 'true'
           remove-codeql: 'true'
 
+      - name: APT
+        run: |
+          sudo apt update
+          sudo apt install libelf-dev
+
       - name: Set CONFIG Environment Variable
         run: |
           # Set CONFIG dynamically based on matrix values
