@@ -148,7 +148,7 @@ jobs:
           cd "$CONFIG"
           
           echo "Building the kernel..."
-          make floral_defconfig
+          make floral_defconfig ARCH=arm64
           make
 
       - name: Create Bootimgs Folder and Copy Images
