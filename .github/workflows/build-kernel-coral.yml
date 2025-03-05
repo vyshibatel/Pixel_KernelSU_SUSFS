@@ -80,7 +80,7 @@ jobs:
       - name: Add KernelSU
         run: |
           echo "Changing to configuration directory: $CONFIG..."
-          cd "$CONFIG/"
+          cd "$CONFIG/common"
           
           echo "Adding KernelSU..."
           curl -LSs "https://raw.githubusercontent.com/KernelSU-Next/KernelSU-Next/next/kernel/setup.sh" | bash -
