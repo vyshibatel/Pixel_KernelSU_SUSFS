@@ -31,8 +31,8 @@ jobs:
         
     if: ${{ inputs.make_release }}
     env:
-      REPO_OWNER: TheWildJames
-      REPO_NAME: OnePlus_KernelSU_SUSFS
+      REPO_OWNER: WildPlusKernel
+      REPO_NAME: Pixel_KernelSU_SUSFS
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       RELEASE_NAME: "*TEST BUILD* Pixel Kernels With KernelSU Next & SUSFS v1.5.3 *TEST BUILD*"
       RELEASE_NOTES: |
