@@ -101,6 +101,9 @@ jobs:
           #cp ../../../kernel_patches/pixel/fdinfo.patch ./
           #patch -p1 --fuzz=3 < fdinfo.patch || true
 
+          sed -i 's/inotify_mark_user_mask(mark));/mask, mark->ignored_mask);/' ./fs/notify/fdinfo.c
+          sed '/#ifdef CONFIG_KSU_SUSFS_SUS_MOUNT/{N;s/#ifdef CONFIG_KSU_SUSFS_SUS_MOUNT\n\t\tif (/&\n\t\tu32 mask = mark->mask & IN_ALL_EVENTS;/}' ./fs/notify/fdinfo.c
+
       - name: Apply KSU Hooks
         run: |
           echo "Changing to configuration directory: $CONFIG..."
