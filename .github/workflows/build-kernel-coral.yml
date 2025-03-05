@@ -148,7 +148,8 @@ jobs:
           cd "$CONFIG"
           
           echo "Building the kernel..."
-          BUILD_AOSP_KERNEL=1 ./build_floral.sh
+          make floral_defconfig
+          make
 
       - name: Create Bootimgs Folder and Copy Images
         run: |
