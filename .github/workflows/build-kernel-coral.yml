@@ -173,6 +173,12 @@ jobs:
           echo "Building the kernel..."
           BUILD_AOSP_KERNEL=1 ./build_floral.sh
 
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: source-${{ env.CONFIG }}
+          path: ${{ env.CONFIG }}
+
       - name: Create Bootimgs Folder and Copy Images
         run: |
           echo "Changing to configuration directory: $CONFIG..."
