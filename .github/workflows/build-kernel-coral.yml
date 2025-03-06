@@ -147,6 +147,8 @@ jobs:
           echo "CONFIG_TMPFS_XATTR=y" >> ./arch/arm64/configs/floral_defconfig
           echo "CONFIG_TMPFS_POSIX_ACL=y" >> ./arch/arm64/configs/floral_defconfig
 
+          sed -i 's/=m/=y/g' ./arch/arm64/configs/floral_defconfig
+
       - name: Run sed and perl Commands
         run: |
           echo "Changing to configuration directory: $CONFIG..."
