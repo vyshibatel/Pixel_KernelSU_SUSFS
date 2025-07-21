@@ -115,7 +115,7 @@ jobs:
           cp ../../../kernel_patches/next/next_hooks_4.14.patch ./
           patch -p1 --fuzz=3 < ./next_hooks_4.14.patch
 
-- name: Update Defconfig for Coral/Sunfish
+      - name: Update Defconfig for Coral/Sunfish
         run: |
           echo "Changing to kernel source directory..."
           cd "$CONFIG/private/msm-google/"
