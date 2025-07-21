@@ -115,42 +115,31 @@ jobs:
           cp ../../../kernel_patches/next/next_hooks_4.14.patch ./
           patch -p1 --fuzz=3 < ./next_hooks_4.14.patch
 
-      - name: 'DIAGNOSTIC: Investigate Build Configuration'
+      - name: 'DIAGNOSTIC V2: Find the DEFCONFIG Definition'
         run: |
           echo "========================================================================"
-          echo "=== STARTING DIAGNOSTIC STEP ==="
+          echo "=== STARTING DIAGNOSTIC V2 ==="
           echo "========================================================================"
           
-          cd "$CONFIG/private/msm-google/"
+          # Переходим в директорию, где лежат скрипты сборки
+          cd "$CONFIG"
 
           echo ""
-          echo "--- 1. Listing ALL available defconfig files in arch/arm64/configs ---"
-          find arch/arm64/configs -name "*_defconfig"
-          
-          echo ""
-          echo "--- 2. Checking the main build.config file ---"
-          # Этот файл определяет, какой defconfig будет использоваться по умолчанию
-          if [ -f "build.config" ]; then
-            cat build.config
-          else
-            echo "build.config not found."
-          fi
+          echo "--- 1. Listing all available build scripts ---"
+          ls -l build*.sh
 
           echo ""
-          echo "--- 3. Checking for specific build configs (like floral, coral, etc.) ---"
-          # Скрипты сборки часто ссылаются на эти файлы
-          if ls build.config.* 1> /dev/null 2>&1; then
-            cat build.config.*
-          else
-            echo "No specific build.config.* files found."
-          fi
+          echo "--- 2. Searching for the 'DEFCONFIG=' variable in all scripts ---"
+          # Эта команда рекурсивно ищет строку "DEFCONFIG=" во всех файлах
+          # и показывает нам имя файла и саму строку.
+          grep -r "DEFCONFIG=" .
 
           echo ""
           echo "========================================================================"
-          echo "=== DIAGNOSTIC STEP FINISHED ==="
+          echo "=== DIAGNOSTIC V2 FINISHED ==="
           echo "========================================================================"
-          echo "::error::This is a planned stop. Please check the logs above to find the correct defconfig name and content."
-          exit 1 # Намеренно прерываем сборку, так как нам нужны только логи
+          echo "::error::This is a planned stop. Please find the 'DEFCONFIG=' line in the logs above."
+          exit 1 # Намеренно прерываем сборку
           
       - name: Add SUSFS Configuration and Fix Drivers
         run: |
