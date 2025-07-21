@@ -120,32 +120,36 @@ jobs:
           echo "Changing to kernel source directory..."
           cd "$CONFIG/private/msm-google/"
           
-          # Определяем правильный файл defconfig для Pixel 4 (coral)
-          DEFCONFIG_FILE="./arch/arm64/configs/vendor/coral_defconfig"
-          echo "Targeting defconfig file: $DEFCONFIG_FILE"
+          echo "Searching for coral_defconfig..."
+          # Ищем файл defconfig для coral во всех поддиректориях
+          DEFCONFIG_FILE=$(find . -type f -name "coral_defconfig")
 
-          # Проверяем, существует ли файл
-          if [ ! -f "$DEFCONFIG_FILE" ]; then
-            echo "Error: Defconfig file not found at $DEFCONFIG_FILE"
-            # Пробуем найти альтернативный путь
-            DEFCONFIG_FILE_ALT="./arch/arm64/configs/coral_defconfig"
-            if [ -f "$DEFCONFIG_FILE_ALT" ]; then
-                echo "Found alternative defconfig at $DEFCONFIG_FILE_ALT"
-                DEFCONFIG_FILE=$DEFCONFIG_FILE_ALT
-            else
-                echo "Alternative defconfig also not found. Exiting."
-                exit 1
-            fi
+          # Проверяем, был ли файл найден
+          if [ -z "$DEFCONFIG_FILE" ]; then
+            echo "::error::Could not find coral_defconfig automatically. Please check the kernel source tree structure."
+            exit 1
           fi
+
+          echo "Found defconfig at: $DEFCONFIG_FILE"
 
           echo "Adding KernelSU, SUSFS, and driver configurations..."
           
-          # Удаляем старые/неверные записи, если они есть, чтобы избежать конфликтов
-          sed -i '/CONFIG_KSU/d' "$DEFCONFIG_FILE"
-          sed -i '/CONFIG_TMPFS/d' "$DEFCONFIG_FILE"
-          sed -i '/CONFIG_TOUCHSCREEN_FTS/d' "$DEFCONFIG_FILE"
-          sed -i '/CONFIG_BCMDHD/d' "$DEFCONFIG_FILE"
-          sed -i '/CONFIG_QCA_CLD_WLAN/d' "$DEFCONFIG_FILE" # Удаляем неверный драйвер
+          # Удаляем старые/неверные записи, чтобы избежать конфликтов
+          # Флаг -i у sed требует расширение для бэкапа на macOS/BSD, но не в GNU sed (в Ubuntu).
+          # Используем > для перезаписи файла, что более надежно в скриптах.
+          
+          # Создаем временный файл
+          TEMP_CONFIG=$(mktemp)
+
+          # Фильтруем старые конфиги
+          grep -v "CONFIG_KSU" "$DEFCONFIG_FILE" | \
+          grep -v "CONFIG_TMPFS" | \
+          grep -v "CONFIG_TOUCHSCREEN_FTS" | \
+          grep -v "CONFIG_BCMDHD" | \
+          grep -v "CONFIG_QCA_CLD_WLAN" > "$TEMP_CONFIG"
+
+          # Перемещаем отфильтрованный контент обратно
+          mv "$TEMP_CONFIG" "$DEFCONFIG_FILE"
 
           # Добавляем все необходимые конфигурации в конец файла
           {
@@ -178,7 +182,7 @@ jobs:
             echo "CONFIG_BCMDHD_NVRAM_PATH=\"/vendor/firmware/nvram.txt\""
           } >> "$DEFCONFIG_FILE"
 
-          echo "Configuration added. Final defconfig content:"
+          echo "Configuration added. Final content of $DEFCONFIG_FILE:"
           cat "$DEFCONFIG_FILE"
 
       - name: Run sed and perl Commands
