@@ -117,18 +117,41 @@ jobs:
 
       - name: Add SUSFS Configuration and Fix Drivers
         run: |
-          echo "Changing to configuration directory: $CONFIG..."
+          echo "Changing to kernel source directory..."
           cd "$CONFIG/private/msm-google/"
           
-          echo "Adding configuration settings to floral_defconfig..."
-          
-          # Путь к файлу defconfig
-          DEFCONFIG_FILE="./arch/arm64/configs/floral_defconfig"
+          # Определяем правильный файл defconfig для Pixel 4 (coral)
+          DEFCONFIG_FILE="./arch/arm64/configs/vendor/coral_defconfig"
+          echo "Targeting defconfig file: $DEFCONFIG_FILE"
 
-          # Добавляем основные настройки KernelSU и SUSFS
+          # Проверяем, существует ли файл
+          if [ ! -f "$DEFCONFIG_FILE" ]; then
+            echo "Error: Defconfig file not found at $DEFCONFIG_FILE"
+            # Пробуем найти альтернативный путь
+            DEFCONFIG_FILE_ALT="./arch/arm64/configs/coral_defconfig"
+            if [ -f "$DEFCONFIG_FILE_ALT" ]; then
+                echo "Found alternative defconfig at $DEFCONFIG_FILE_ALT"
+                DEFCONFIG_FILE=$DEFCONFIG_FILE_ALT
+            else
+                echo "Alternative defconfig also not found. Exiting."
+                exit 1
+            fi
+          fi
+
+          echo "Adding KernelSU, SUSFS, and driver configurations..."
+          
+          # Удаляем старые/неверные записи, если они есть, чтобы избежать конфликтов
+          sed -i '/CONFIG_KSU/d' "$DEFCONFIG_FILE"
+          sed -i '/CONFIG_TMPFS/d' "$DEFCONFIG_FILE"
+          sed -i '/CONFIG_TOUCHSCREEN_FTS/d' "$DEFCONFIG_FILE"
+          sed -i '/CONFIG_BCMDHD/d' "$DEFCONFIG_FILE"
+          sed -i '/CONFIG_QCA_CLD_WLAN/d' "$DEFCONFIG_FILE" # Удаляем неверный драйвер
+
+          # Добавляем все необходимые конфигурации в конец файла
           {
+            echo ""
+            echo "# KernelSU and SUSFS Configuration"
             echo "CONFIG_KSU=y"
-            echo "CONFIG_KSU_WITH_KPROBES=n"
             echo "CONFIG_KSU_SUSFS=y"
             echo "CONFIG_KSU_SUSFS_HAS_MAGIC_MOUNT=y"
             echo "CONFIG_KSU_SUSFS_SUS_PATH=y"
@@ -147,23 +170,15 @@ jobs:
             echo "CONFIG_KSU_SUSFS_SUS_SU=n"
             echo "CONFIG_TMPFS_XATTR=y"
             echo "CONFIG_TMPFS_POSIX_ACL=y"
+            echo ""
+            echo "# Pixel 4 (coral) Specific Drivers"
+            echo "CONFIG_TOUCHSCREEN_FTS=y"
+            echo "CONFIG_BCMDHD=m"
+            echo "CONFIG_BCMDHD_FW_PATH=\"/vendor/firmware/fw_bcmdhd.bin\""
+            echo "CONFIG_BCMDHD_NVRAM_PATH=\"/vendor/firmware/nvram.txt\""
           } >> "$DEFCONFIG_FILE"
 
-          echo "Forcing touchscreen and WLAN drivers to be built-in..."
-          
-          # Сначала проверяем, есть ли эти опции, и если да, меняем =m на =y
-          sed -i 's/CONFIG_TOUCHSCREEN_FTS=m/CONFIG_TOUCHSCREEN_FTS=y/' "$DEFCONFIG_FILE"
-          sed -i 's/CONFIG_QCA_CLD_WLAN=m/CONFIG_QCA_CLD_WLAN=y/' "$DEFCONFIG_FILE"
-          
-          # Затем добавляем их, если их не было, чтобы гарантировать их наличие
-          echo "CONFIG_TOUCHSCREEN_FTS=y" >> "$DEFCONFIG_FILE"
-          echo "CONFIG_QCA_CLD_WLAN=y" >> "$DEFCONFIG_FILE"
-
-          echo "Cleaning up duplicate config entries..."
-          # Сортируем и удаляем дубликаты, которые могли появиться
-          sort -u -o "$DEFCONFIG_FILE" "$DEFCONFIG_FILE"
-
-          echo "Final defconfig content:"
+          echo "Configuration added. Final defconfig content:"
           cat "$DEFCONFIG_FILE"
 
       - name: Run sed and perl Commands
@@ -186,11 +201,12 @@ jobs:
 
       - name: Build the Kernel
         run: |
-          echo "Changing to configuration directory: $CONFIG..."
+          echo "Changing to build script directory..."
           cd "$CONFIG"
           
-          echo "Building the kernel..."
-          BUILD_AOSP_KERNEL=1 ./build_floral.sh
+          echo "Building the kernel for coral..."
+          # Используем правильный скрипт сборки для coral
+          BUILD_AOSP_KERNEL=1 ./build.sh
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
