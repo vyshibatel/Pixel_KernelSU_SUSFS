@@ -52,7 +52,7 @@ jobs:
           # Clone repositories using the branch names
           git clone https://github.com/WildPlusKernel/AnyKernel3.git -b "$ANYKERNEL_BRANCH"
           git clone https://gitlab.com/simonpunk/susfs4ksu.git -b "$SUSFS_BRANCH"
-          git clone https://github.com/rapeazabe888/kernel_patches.git
+          git clone https://github.com/WildPlusKernel/kernel_patches.git
       
       - name: Initialize and Sync Kernel Source
         run: |
@@ -86,7 +86,7 @@ jobs:
           echo "Applying SUSFS patches..."
           
           # Copy SUSFS patches
-          cp ../../../kernel_patches/next/0001-kernel-patch-susfs-v1.5.5-to-KernelSU-Next-v1.0.5.patch ./KernelSU-Next
+          cp ../../../kernel_patches/next/0001-kernel-implement-susfs-v1.5.5-v1.5.7-KSUN-v1.0.8.patch ./KernelSU-Next
           cp ../../../susfs4ksu/kernel_patches/50_add_susfs_in_kernel-4.14.patch ./
           cp ../../../susfs4ksu/kernel_patches/fs/* ./fs/
           cp ../../../susfs4ksu/kernel_patches/include/linux/* ./include/linux/
