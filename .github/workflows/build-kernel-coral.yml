@@ -182,10 +182,8 @@ jobs:
           
           echo "Running sed commands..."
           
-          # Run sed commands for modifications
-          #sed -i 's/check_defconfig//' ./build.config
-          #sed -i 's/check_defconfig//' ./build.config.floral
-          sed -i 's/check_defconfig && //' ./build.config.floral_no-cfi
+          # Отключаем проверку defconfig ВЕЗДЕ, где она может быть
+          sed -i 's/check_defconfig && //' ./build.config.*
 
           sed -i '$s|echo "\$res"|echo "\-Wild+"|' ./scripts/setlocalversion
           sed -i 's/-dirty//' ./scripts/setlocalversion
