@@ -94,7 +94,7 @@ jobs:
           cd ./KernelSU-Next
           
           # Apply SUSFS patch for KernelSU
-          patch -p1 --forward < 0001-kernel-patch-susfs-v1.5.5-to-KernelSU-Next-v1.0.5.patch || true
+          patch -p1 --forward < 0001-kernel-implement-susfs-v1.5.5-v1.5.7-KSUN-v1.0.8.patch || true
           
           # Change to common directory and apply SUSFS patch
           cd ..
