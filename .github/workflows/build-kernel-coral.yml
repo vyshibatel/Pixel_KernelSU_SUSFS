@@ -200,7 +200,7 @@ jobs:
           
           echo "Building the kernel for coral..."
           # Используем правильный скрипт сборки для coral
-          BUILD_AOSP_KERNEL=1 ./build.sh
+          BUILD_AOSP_KERNEL=1 ./build_sunfish.sh
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
