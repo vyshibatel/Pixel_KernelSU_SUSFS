@@ -115,66 +115,30 @@ jobs:
           cp ../../../kernel_patches/next/next_hooks_4.14.patch ./
           patch -p1 --fuzz=3 < ./next_hooks_4.14.patch
 
-      - name: 'DIAGNOSTIC V2: Find the DEFCONFIG Definition'
-        run: |
-          echo "========================================================================"
-          echo "=== STARTING DIAGNOSTIC V2 ==="
-          echo "========================================================================"
-          
-          # Переходим в директорию, где лежат скрипты сборки
-          cd "$CONFIG"
-
-          echo ""
-          echo "--- 1. Listing all available build scripts ---"
-          ls -l build*.sh
-
-          echo ""
-          echo "--- 2. Searching for the 'DEFCONFIG=' variable in all scripts ---"
-          # Эта команда рекурсивно ищет строку "DEFCONFIG=" во всех файлах
-          # и показывает нам имя файла и саму строку.
-          grep -r "DEFCONFIG=" .
-
-          echo ""
-          echo "========================================================================"
-          echo "=== DIAGNOSTIC V2 FINISHED ==="
-          echo "========================================================================"
-          echo "::error::This is a planned stop. Please find the 'DEFCONFIG=' line in the logs above."
-          exit 1 # Намеренно прерываем сборку
-          
-      - name: Add SUSFS Configuration and Fix Drivers
+- name: Update Defconfig for Coral/Sunfish
         run: |
           echo "Changing to kernel source directory..."
           cd "$CONFIG/private/msm-google/"
           
-          echo "Searching for coral_defconfig..."
-          # Ищем файл defconfig для coral во всех поддиректориях
-          DEFCONFIG_FILE=$(find . -type f -name "coral_defconfig")
+          # Мы выяснили, что для coral используется sunfish_defconfig
+          # Ищем его точный путь
+          DEFCONFIG_FILE=$(find . -type f -name "sunfish_defconfig")
 
-          # Проверяем, был ли файл найден
           if [ -z "$DEFCONFIG_FILE" ]; then
-            echo "::error::Could not find coral_defconfig automatically. Please check the kernel source tree structure."
+            echo "::error::Could not find sunfish_defconfig. This should not happen based on diagnostic run."
             exit 1
           fi
 
-          echo "Found defconfig at: $DEFCONFIG_FILE"
+          echo "Found target defconfig at: $DEFCONFIG_FILE"
 
           echo "Adding KernelSU, SUSFS, and driver configurations..."
           
-          # Удаляем старые/неверные записи, чтобы избежать конфликтов
-          # Флаг -i у sed требует расширение для бэкапа на macOS/BSD, но не в GNU sed (в Ubuntu).
-          # Используем > для перезаписи файла, что более надежно в скриптах.
-          
-          # Создаем временный файл
+          # Очищаем старые записи для надежности
           TEMP_CONFIG=$(mktemp)
-
-          # Фильтруем старые конфиги
           grep -v "CONFIG_KSU" "$DEFCONFIG_FILE" | \
           grep -v "CONFIG_TMPFS" | \
           grep -v "CONFIG_TOUCHSCREEN_FTS" | \
-          grep -v "CONFIG_BCMDHD" | \
-          grep -v "CONFIG_QCA_CLD_WLAN" > "$TEMP_CONFIG"
-
-          # Перемещаем отфильтрованный контент обратно
+          grep -v "CONFIG_BCMDHD" > "$TEMP_CONFIG"
           mv "$TEMP_CONFIG" "$DEFCONFIG_FILE"
 
           # Добавляем все необходимые конфигурации в конец файла
@@ -209,7 +173,7 @@ jobs:
           } >> "$DEFCONFIG_FILE"
 
           echo "Configuration added. Final content of $DEFCONFIG_FILE:"
-          cat "$DEFCONFIG_FILE"
+          tail -n 25 "$DEFCONFIG_FILE"
 
       - name: Run sed and perl Commands
         run: |
