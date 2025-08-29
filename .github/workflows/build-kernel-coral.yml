@@ -19,28 +19,37 @@ jobs:
           remove-dotnet: 'true'
           remove-android: 'true'
 
-      # --- Шаг 1: Клонируем ваш репозиторий с ядром ---
+      # --- Шаг 1: Клонируем ваш репозиторий с исходным кодом ядра ---
       - name: Checkout Kernel Source
         uses: actions/checkout@v4
         with:
-          repository: vyshibatel/Pixel_Kernels # Указываем ваш репозиторий с ядром
-          path: Pixel_Kernels # Клонируем его
+          repository: vyshibatel/Pixel_Kernels
+          path: Pixel_Kernels
 
-      # --- Шаг 2: Клонируем AnyKernel3 для упаковки ---
+      # --- Шаг 2: Клонируем официальный AOSP Clang ---
+      - name: Clone AOSP Clang Toolchain
+        run: git clone --depth=1 https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86 aosp-clang
+
+      # --- Шаг 3: Клонируем AnyKernel3 для упаковки ---
       - name: Clone AnyKernel3
         run: git clone https://github.com/WildPlusKernel/AnyKernel3.git AnyKernel3
 
-      # --- Шаг 3: Запускаем сборку ---
+      # --- Шаг 4: Запускаем сборку ядра ---
       - name: Build the Kernel
         run: |
           # Заходим в папку с вашими исходниками
           cd Pixel_Kernels
           
-          # Запускаем скрипт сборки. Он будет работать с кодом, в котором находится.
-          # BUILD_AOSP_KERNEL=1 теперь не нужен, т.к. мы уже в правильной директории
+          # Устанавливаем переменные окружения, чтобы скрипт нашел новый компилятор
+          export PATH="${{ github.workspace }}/aosp-clang/clang-r416183b/bin:$PATH"
+          export CLANG_TRIPLE="aarch64-linux-gnu-"
+          export CROSS_COMPILE="aarch64-linux-gnu-"
+          export CROSS_COMPILE_ARM32="arm-linux-gnueabi-"
+          
+          # Запускаем скрипт сборки
           ./build_floral.sh
 
-      # --- Шаг 4: Упаковываем ZIP ---
+      # --- Шаг 5: Упаковываем ZIP-архив ---
       - name: Package with AnyKernel3
         run: |
           # Копируем скомпилированные артефакты в папку AnyKernel3
@@ -51,7 +60,7 @@ jobs:
           cd AnyKernel3
           zip -r "../Anykernel3-Coral-Final.zip" ./*
 
-      # --- Шаг 5: Выгружаем артефакт ---
+      # --- Шаг 6: Выгружаем готовый ZIP как артефакт ---
       - name: Upload Kernel Zip
         uses: actions/upload-artifact@v4
         with:
