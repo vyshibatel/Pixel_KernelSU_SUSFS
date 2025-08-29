@@ -1,7 +1,11 @@
 name: Build Coral 4.14 Kernel
 
 on:
-  workflow_dispatch: # Позволяет запускать вручную
+  # Этот триггер ОБЯЗАТЕЛЕН, чтобы workflow можно было вызывать из другого
+  workflow_call:
+
+  # Этот триггер НЕОБЯЗАТЕЛЕН, он позволяет запускать workflow вручную
+  workflow_dispatch:
 
 jobs:
   build-kernel:
