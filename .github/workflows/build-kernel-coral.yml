@@ -54,22 +54,6 @@ jobs:
           git clone https://github.com/vyshibatel/Pixel_Kernels.git ${{ github.workspace }}/Pixel_Kernels
           echo "PIXEL_KERNELS_PATH=${{ github.workspace }}/Pixel_Kernels" >> $GITHUB_ENV
 
-      - name: Clone AnyKernel3 and Other Dependencies
-        run: |
-          echo "Cloning AnyKernel3 and other dependencies..."
-
-          ANYKERNEL_BRANCH="non-gki"
-          SUSFS_BRANCH="kernel-4.14"
-
-          echo "Using branch for AnyKernel3: $ANYKERNEL_BRANCH"
-          echo "Using branch for SUSFS: $SUSFS_BRANCH"
-
-          git clone https://github.com/WildPlusKernel/AnyKernel3.git -b "$ANYKERNEL_BRANCH"
-          git clone https://gitlab.com/simonpunk/susfs4ksu.git -b "$SUSFS_BRANCH"
-          
-          # Копируем каталог kernel_patches из вашего форка Pixel_Kernels в текущий рабочий каталог
-          # Это предполагает, что 'kernel_patches' находится в корне 'vyshibatel/Pixel_Kernels'
-          cp -r "${{ env.PIXEL_KERNELS_PATH }}/kernel_patches" .
 
       - name: Initialize and Sync Kernel Source
         run: |
@@ -82,84 +66,6 @@ jobs:
 
           $REPO --version
           $REPO --trace sync -c -j$(nproc --all) --no-tags --fail-fast
-
-      - name: Add KernelSU
-        run: |
-          echo "Changing to configuration directory: $CONFIG..."
-          cd "$CONFIG/private/msm-google/"
-
-          echo "Adding KernelSU..."
-          curl -LSs "https://raw.githubusercontent.com/KernelSU-Next/KernelSU-Next/next/kernel/setup.sh" | bash -s v1.0.8
-
-      - name: Apply SUSFS Patches
-        run: |
-          echo "Changing to configuration directory: $CONFIG..."
-          cd "$CONFIG/private/msm-google/"
-
-          echo "Applying SUSFS patches..."
-
-          # Используем патчи из вашего форка Pixel_Kernels
-          cp "${{ env.PIXEL_KERNELS_PATH }}/kernel_patches/next/0001-kernel-implement-susfs-v1.5.5-v1.5.7-KSUN-v1.0.8.patch" ./KernelSU-Next
-          cp ../../../susfs4ksu/kernel_patches/50_add_susfs_in_kernel-4.14.patch ./
-          cp ../../../susfs4ksu/kernel_patches/fs/* ./fs/
-          cp ../../../susfs4ksu/kernel_patches/include/linux/* ./include/linux/
-
-          cd ./KernelSU-Next
-
-          patch -p1 --forward < 0001-kernel-implement-susfs-v1.5.5-v1.5.7-KSUN-v1.0.8.patch || true
-
-          cd ..
-          patch -p1 --fuzz=3 < 50_add_susfs_in_kernel-4.14.patch || true
-
-          # Если вы хотите использовать fdinfo.patch из вашего форка Pixel_Kernels, раскомментируйте это:
-          # cp "${{ env.PIXEL_KERNELS_PATH }}/kernel_patches/pixel/fdinfo.patch" ./
-          # patch -p1 --fuzz=3 < fdinfo.patch || true
-
-          sed -i 's/^\(\s*\)u32 mask = mark->mask & IN_ALL_EVENTS;/\1\/\/u32 mask = mark->mask & IN_ALL_EVENTS;/' ./fs/notify/fdinfo.c
-          sed -i 's/inotify_mark_user_mask(mark));/mask, mark->ignored_mask);/' ./fs/notify/fdinfo.c
-          sed -i '/if (likely(current->susfs_task_state & TASK_STRUCT_NON_ROOT_USER_APP_PROC) &&/i \ \ \ \ u32 mask = mark->mask & IN_ALL_EVENTS;' ./fs/notify/fdinfo.c
-
-      - name: Apply KSU Hooks
-        run: |
-          echo "Changing to configuration directory: $CONFIG..."
-          cd "$CONFIG/private/msm-google/"
-          # Используем хуки из вашего форка Pixel_Kernels
-          cp "${{ env.PIXEL_KERNELS_PATH }}/kernel_patches/next/next_hooks_4.14.patch" ./
-          patch -p1 --fuzz=3 < ./next_hooks_4.14.patch
-
-      - name: Add SUSFS Configuration Settings
-        run: |
-          echo "Changing to configuration directory: $CONFIG..."
-          cd "$CONFIG/private/msm-google/"
-
-          echo "Adding configuration settings to floral_defconfig..."
-
-          echo "CONFIG_TOUCHSCREEN_FTS=y" >> ./arch/arm64/configs/floral_defconfig
-
-          echo "CONFIG_KSU=y" >> ./arch/arm64/configs/floral_defconfig
-          echo "CONFIG_KSU_WITH_KPROBES=n" >> ./arch/arm64/configs/floral_defconfig
-
-          echo "CONFIG_KSU_SUSFS=y" >> ./arch/arm64/configs/floral_defconfig
-          echo "CONFIG_KSU_SUSFS_HAS_MAGIC_MOUNT=y" >> ./arch/arm64/configs/floral_defconfig
-          echo "CONFIG_KSU_SUSFS_SUS_PATH=y" >> ./arch/arm64/configs/floral_defconfig
-          echo "CONFIG_KSU_SUSFS_SUS_MOUNT=y" >> ./arch/arm64/configs/floral_defconfig
-          echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_KSU_DEFAULT_MOUNT=y" >> ./arch/arm64/configs/floral_defconfig
-          echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_BIND_MOUNT=y" >> ./arch/arm64/configs/floral_defconfig
-          echo "CONFIG_KSU_SUSFS_SUS_KSTAT=y" >> ./arch/arm64/configs/floral_defconfig
-          echo "CONFIG_KSU_SUSFS_SUS_OVERLAYFS=y" >> ./arch/arm64/configs/floral_defconfig
-          echo "CONFIG_KSU_SUSFS_TRY_UMOUNT=y" >> ./arch/arm64/configs/floral_defconfig
-          echo "CONFIG_KSU_SUSFS_AUTO_ADD_TRY_UMOUNT_FOR_BIND_MOUNT=y" >> ./arch/arm64/configs/floral_defconfig
-          echo "CONFIG_KSU_SUSFS_SPOOF_UNAME=y" >> ./arch/arm64/configs/floral_defconfig
-          echo "CONFIG_KSU_SUSFS_ENABLE_LOG=y" >> ./arch/arm64/configs/floral_defconfig
-          echo "CONFIG_KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS=y" >> ./arch/arm64/configs/floral_defconfig
-          echo "CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG=y" >> ./arch/arm64/configs/floral_defconfig
-          echo "CONFIG_KSU_SUSFS_OPEN_REDIRECT=y" >> ./arch/arm64/configs/floral_defconfig
-          echo "CONFIG_KSU_SUSFS_SUS_SU=n" >> ./arch/arm64/configs/floral_defconfig
-
-          echo "CONFIG_TMPFS_XATTR=y" >> ./arch/arm64/configs/floral_defconfig
-          echo "CONFIG_TMPFS_POSIX_ACL=y" >> ./arch/arm64/configs/floral_defconfig
-
-          sed -i 's/=m/=y/g' ./arch/arm64/configs/floral_defconfig
 
       - name: Run sed and perl Commands
         run: |
