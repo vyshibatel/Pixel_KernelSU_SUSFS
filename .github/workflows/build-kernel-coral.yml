@@ -54,7 +54,14 @@ jobs:
           git clone https://github.com/vyshibatel/Pixel_Kernels.git ${{ github.workspace }}/Pixel_Kernels
           echo "PIXEL_KERNELS_PATH=${{ github.workspace }}/Pixel_Kernels" >> $GITHUB_ENV
 
+      - name: Clone AnyKernel3 and Other Dependencies
+        run: |
+          echo "Cloning AnyKernel3 and other dependencies..."
 
+
+          git clone https://github.com/WildPlusKernel/AnyKernel3.git -b "$ANYKERNEL_BRANCH"
+
+          
       - name: Initialize and Sync Kernel Source
         run: |
           echo "Creating folder for configuration: $CONFIG..."
